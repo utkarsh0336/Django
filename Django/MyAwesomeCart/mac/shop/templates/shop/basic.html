@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <title>{%block title%} {%endblock%}</title>
+     <style>
+        {% block css %}{% endblock %}
+        
+        /* Chat Widget Styles */
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .chat-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .chat-container {
+            display: none;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                transform: translateY(20px); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateY(0); 
+                opacity: 1; 
+            }
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .chat-messages {
+            height: 380px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message.bot {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 15px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+        
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .typing-dots {
+            display: inline-block;
+            animation: typing 1.4s infinite;
+        }
+        
+        @keyframes typing {
+            0%, 20% { content: "AI is thinking"; }
+            40% { content: "AI is thinking."; }
+            60% { content: "AI is thinking.."; }
+            80%, 100% { content: "AI is thinking..."; }
+        }
+        
+        .close-chat {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">My Awesome Cart</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Link</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Dropdown
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                </li>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Cart(<span id="cart">0</span>)</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
+
+    {% block body %}  {% endblock %}
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <button class="chat-button" onclick="toggleChat()">💬</button>
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <button class="close-chat" onclick="toggleChat()">×</button>
+                AI Shopping Assistant
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-content">
+                        👋 Hi! I'm your AI shopping assistant. How can I help you today?
+                    </div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                AI is typing...
+            </div>
+            <div class="chat-input-container">
+                <div class="chat-input-group">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                    <button class="send-button" onclick="sendMessage()">➤</button>
+                    <button class="send-button" id="micButton" type="button" title="Speak" style="margin-left:5px;">
+                        <span id="micIcon">🎤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+        integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+        integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+        crossorigin="anonymous"></script>
+    
+    <!-- Chat Widget JavaScript -->
+    <script>
+        function toggleChat() {
+            const container = document.getElementById('chatContainer');
+            const button = document.querySelector('.chat-button');
+            
+            if (container.style.display === 'none' || container.style.display === '') {
+                container.style.display = 'block';
+                button.style.display = 'none';
+            } else {
+                container.style.display = 'none';
+                button.style.display = 'block';
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function addMessage(content, isUser = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'block';
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Create AbortController for timeout handling
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 65000); // 65 second timeout
+            
+            // Send to backend
+            fetch('/shop/chatbot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({message: message}),
+                signal: controller.signal
+            })
+            .then(response => {
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                hideTypingIndicator();
+                if (data.reply) {
+                    addMessage(data.reply, false);
+                } else if (data.error) {
+                    addMessage(`Error: ${data.error}`, false);
+                } else {
+                    addMessage('Sorry, I received an unexpected response. Please try again.', false);
+                }
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                hideTypingIndicator();
+                console.error('Error:', error);
+                
+                if (error.name === 'AbortError') {
+                    addMessage('⏰ Request timed out after 65 seconds. The AI might be busy or your request is too complex. Please try a shorter message.', false);
+                } else if (error.message.includes('HTTP 503')) {
+                    addMessage('❌ Ollama server is not running. Please start Ollama and try again.', false);
+                } else if (error.message.includes('HTTP 408')) {
+                    addMessage('⏰ Request timed out. The model might be loading. Please try again in a few seconds.', false);
+                } else if (error.message.includes('Failed to fetch')) {
+                    addMessage('🌐 Network error. Please check your connection and try again.', false);
+                } else {
+                    addMessage('❌ An error occurred. Please try again later.', false);
+                }
+            });
+        }
+        
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Voice Assistant (Speech-to-Text)
+        let recognizing = false;
+        let recognition;
+        const micButton = document.getElementById('micButton');
+        const micIcon = document.getElementById('micIcon');
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() {
+                recognizing = true;
+                micIcon.textContent = '🔴';
+            };
+            recognition.onend = function() {
+                recognizing = false;
+                micIcon.textContent = '🎤';
+            };
+            recognition.onerror = function(event) {
+                recognizing = false;
+                micIcon.textContent = '🎤';
+                alert('Voice recognition error: ' + event.error);
+            };
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = transcript;
+                sendMessage();
+            };
+            micButton.onclick = function() {
+                if (recognizing) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            };
+        } else {
+            micButton.style.display = 'none';
+        }
+    </script>
+
+    {% block js %} 
+    
+    
+    
+    
+    {% endblock %}
+
+</body>
+
+</html>
